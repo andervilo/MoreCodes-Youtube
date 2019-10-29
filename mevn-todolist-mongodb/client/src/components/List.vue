@@ -59,7 +59,7 @@ export default {
       )
     },
     addNewTask () {
-      axios.post('/api/task',
+      axios.post('/api/tasks',
         { title: this.taskname }
       ).then((res) => {
         this.taskname = ''
@@ -77,7 +77,7 @@ export default {
     },
 
     updateTask () {
-      axios.put(`/api/task/${this.id}`,
+      axios.put(`/api/tasks/${this.id}`,
         { title: this.taskname }
       ).then((res) => {
         this.taskname = ''
@@ -90,7 +90,7 @@ export default {
     },
 
     deleteTask (id) {
-      axios.delete(`/api/task/${id}`
+      axios.delete(`/api/tasks/${id}`
       ).then((res) => {
         this.taskname = ''
         this.getTasks()

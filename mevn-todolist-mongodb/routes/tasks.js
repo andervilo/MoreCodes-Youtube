@@ -1,55 +1,49 @@
 var express = require("express");
 var router = express.Router();
-var mongojs = require("mongojs");
-var db = mongojs(
-  "meantask",
-  ["tasks"]
-);
+const ObjectId = require('mongodb').ObjectID
+const MongoClient = require('mongodb').MongoClient
+const uri = "mongodb+srv://dbuser:suelaine0512.@cluster0-j3kxl.mongodb.net/crud-example";
 
-// Get All Tasks
-router.get("/tasks", function(req, res, next) {
-  db.tasks.find(function(err, tasks) {
-    if (err) {
-      res.send(err);
-    }
-    res.json(tasks);
-  });
-});
+// const uri = "mongodb+srv://dbuser:suelaine0512.@cluster0-j3kxl.mongodb.net/crud-example";
+// var db = mongojs(
+//   "meantask",
+//   ["tasks"]
+// );
 
-//Save Task
-router.post("/task", function(req, res, next) {
-  var task = req.body;
-  console.log(task);
-  if (!task.title) {
-    res.status(400);
-    res.json({
-      error: "Bad Data"
-    });
-  } else {
-    db.tasks.save(task, function(err, task) {
-      if (err) {
-        res.send(err);
-      }
-      res.json(task);
-    });
-  }
-});
+MongoClient.connect(uri, (err, client) => {
+  if (err) return console.log(err)
+  db = client.db('crud-example') 
+})
 
-// Delete Task
-router.delete("/task/:id", function(req, res, next) {
-  db.tasks.remove({ _id: mongojs.ObjectId(req.params.id) }, function(
-    err,
-    task
-  ) {
-    if (err) {
-      res.send(err);
-    }
-    res.json(task);
-  });
+router.get("/tasks",function(req, res) {
+  db.collection('tasks').find().toArray((err, results) => {
+    if (err) return console.log(err)
+    console.log(results)
+    res.json(results)
+  })
+})
+
+router.post("/tasks", (req,res)=>{
+  db.collection('tasks').save(req.body, (err, result) => {
+    if (err) return console.log(err)
+
+    console.log('Salvo no Banco de Dados')
+    res.json(result)
+  })
+})
+
+router.delete("/tasks/:id", function(req, res, next) { 
+  console.log(req.params.id);
+  
+  db.collection('tasks').deleteOne({_id: ObjectId(req.params.id)}, (err, result) => {
+    if (err) return res.send(500, err)
+    console.log('Deletado do Banco de Dados!')
+    res.json(result)
+  })
 });
 
 // Update Task
-router.put("/task/:id", function(req, res, next) {
+router.put("/tasks/:id", function(req, res, next) {
   var task = req.body;
   var updTask = {};
 
@@ -63,17 +57,14 @@ router.put("/task/:id", function(req, res, next) {
       error: "Bad Data"
     });
   } else {
-    db.tasks.update(
-      { _id: mongojs.ObjectId(req.params.id) },
-      updTask,
-      {},
-      function(err, task) {
-        if (err) {
-          res.send(err);
-        }
-        res.json(task);
+    db.collection('tasks').updateOne({_id: ObjectId(req.params.id)}, {
+      $set: {
+        title: updTask.title
       }
-    );
+    }, (err, result) => {
+      if (err) return res.send(err)
+      res.json(result)
+    })
   }
 });
 
